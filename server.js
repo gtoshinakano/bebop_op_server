@@ -1,15 +1,25 @@
 var bebop = require('node-bebop');
+var io = require('socket.io')(7575)
 
-var drone = bebop.createClient();
+io.on('connect', socket => {
+  console.log('Client connected to Socket.io');
+  socket.emit("ping", "pong");
 
-console.log("Oi meu rei");
-
-drone.connect(function() {
-  drone.GPSSettings.resetHome();
-  drone.WifiSettings.outdoorSetting(1);
-
-  drone.on("PositionChanged", function(data) {
-    console.log("Sai do lugar");
-    console.log(data);
-  });
+  socket.on('disconnect', () => {
+    console.log('Client diconnected from Socket.io');
+  })
 });
+
+
+//var drone = bebop.createClient();
+
+/* drone.connect(function() {
+  console.log("Conectei e vou subir");
+  drone.takeOff();
+
+  setTimeout(function() {
+    console.log("To descendo mulek");
+    drone.land();
+  }, 5000);
+});
+*/
