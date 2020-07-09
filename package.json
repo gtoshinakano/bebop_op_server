@@ -1,0 +1,18 @@
+{
+  "name": "bebop_op_server",
+  "version": "1.0.0",
+  "description": "Server to controll Bebop Drone with socket.io",
+  "main": "server",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-bebop": "^0.6.0",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node server",
+    "start": "node server.js"
+  },
+  "author": "Nakano Gabriel Toshinori",
+  "license": "ISC"
+}
