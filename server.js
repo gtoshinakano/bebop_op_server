@@ -1,12 +1,13 @@
 var bebop = require('node-bebop');
 var io = require('socket.io')(7575)
+var jsoncolor = require('json-colorizer');
 
 io.on('connect', socket => {
   console.log('Client connected to Socket.io');
   socket.emit("ping", "pong");
 
   socket.on('disconnect', () => {
-    console.log('Client diconnected from Socket.io');
+    console.log(jsoncolor({text: 'Client diconnected from Socket.io'}));
   })
 });
 
