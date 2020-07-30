@@ -7,6 +7,12 @@ io.on('connect', socket => {
   socket.emit("ping", "pong");
   socket.emit("drone_connected", false)
 
+  /* For testing purposes
+  socket.emit("gps_ready", true)
+  socket.emit("gps_position_changed", {latitude: 43.024656, longitude: 141.344694})
+  socket.emit("gps_ready",false)
+  //*/
+
   //Init drone
   var drone = bebop.createClient();
 
@@ -17,7 +23,6 @@ io.on('connect', socket => {
       socket.emit("flight_status", "Drone is ready")
       console.log(drone.navData);
     })
-
 
     // Send battery level
     drone.on("battery", (data) => socket.emit("battery_level", data))
@@ -40,7 +45,43 @@ io.on('connect', socket => {
     // Send emergency
     drone.on("emergency", () => socket.emit("flight_status", "Drone encountered an emergency condition"))
 
-    drone.on("GPSFixStateChanged", (data) => socket.emit("flight_status", "GPSFixStateChanged : " + JSON.stringify(data)))
+    drone.on("GPSFixStateChanged", (data) => socket.emit("flight_status", "GPS Fix State changed : " + JSON.stringify(data)))
+
+    drone.on("MagnetoCalibrationRequiredState", (data) => socket.emit("flight_status", "Calibration Required : " + JSON.stringify(data)))
+
+    drone.on("MaxAltitudeChanged", (data) => socket.emit("flight_status", "Max Altitude changed : " + JSON.stringify(data)))
+
+    drone.on("MaxDistanceChanged", (data) => socket.emit("flight_status", "Max Distance changed : " + JSON.stringify(data)))
+
+    drone.on("OutdoorChanged", (data) => socket.emit("flight_status", "Outdoor changed : " + JSON.stringify(data)))
+
+    drone.on("HomeChanged", (data) => socket.emit("flight_status", "Home changed : " + JSON.stringify(data)))
+
+    /* If number is different emit signal to the
+      client with the new number of satellites found
+    */
+    let numOfSat = 0;
+
+    drone.on("NumberOfSatelliteChanged", (data) => {
+      console.log("Num of sat changed", data.numberOfSatellite);
+      if(data.numberOfSatellite != numOfSat){
+        numOfSat= data.numberOfSatellite;
+        socket.emit("flight_status", "Number of Satellites : " + numOfSat)
+        if(numOfSat > 0) socket.emit("gps_ready", true)
+      }
+    })
+
+    /* Prepare drone to get GPS Data
+      1- Reset home and set Outdoor 1
+      2- Listen for PositionChanged and send to client
+    */
+    drone.GPSSettings.resetHome()
+    drone.WifiSettings.outdoorSetting(1)
+    drone.on("PositionChanged", (data) => {
+      console.log(data);
+      if(data.latitude != 500 && data.longitude != 500 && data.altitude != 500)
+        socket.emit("gps_position_changed", data)
+    })
 
     /* This is for testing purposes
     drone.takeOff()
