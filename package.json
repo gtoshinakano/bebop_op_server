@@ -4,7 +4,6 @@
   "description": "Server to controll Bebop Drone with socket.io",
   "main": "server",
   "dependencies": {
-    "express": "^4.17.1",
     "json-colorizer": "^2.2.2",
     "node-bebop": "^0.6.0",
     "socket.io": "^2.3.0"
