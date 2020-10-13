@@ -6,6 +6,7 @@ io.on('connect', socket => {
   console.log('Client connected to Socket.io');
   socket.emit("ping", "pong");
   socket.emit("drone_connected", false)
+  socket.emit("drone_can_mission", false)
 
   /* For testing purposes
   socket.emit("gps_ready", true)
@@ -87,6 +88,37 @@ io.on('connect', socket => {
     drone.takeOff()
     setTimeout(() => drone.land() , 7000)
     //*/
+
+    drone.on("MavlinkPlayErrorStateChanged", function(data) {
+      socket.emit("flight_status", "MavlinkPlayErrorStateChanged : " + JSON.stringify(data))
+    });
+
+    drone.on("MavlinkFilePlayingStateChanged", function(data) {
+      socket.emit("flight_status", "MavlinkFilePlayingStateChanged : " + JSON.stringify(data))
+    });
+
+    var canDoMission = false
+    drone.on("AvailabilityStateChanged", function(data) {
+      console.log("AvailabilityStateChanged", data);
+      socket.emit("flight_status", "AvailabilityStateChanged : " + JSON.stringify(data))
+      if (data.AvailabilityState === 1) {
+        canDoMission = true;
+        socket.emit("drone_can_mission", true)
+      }else{
+        canDoMission = false;
+        socket.emit("drone_can_mission", false)
+      }
+    });
+
+    socket.on("start_mission" , function(data) {
+      drone.Mavlink.start("/data/ftp/internal_000/flightplans/flightPlan.mavlink", 0);
+    })
+
+    drone.on("ComponentStateListChanged", function(data) {
+      console.log("ComponentStateListChanged", data);
+    });
+
+
 
   })
 
