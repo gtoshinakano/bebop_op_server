@@ -1,11 +1,17 @@
 var bebop = require('node-bebop');
 var io = require('socket.io')(7575)
 var jsoncolor = require('json-colorizer');
+var log = require('log-to-file');
+var fs = require("fs");
+
+var logTime = new Date();
+fs.writeFileSync("logs/"+logTime.getTime()+".log", "Log Created at " + logTime+"\n", () => console.log("oie"))
+
 
 io.on('connect', socket => {
   console.log('Client connected to Socket.io');
   socket.emit("ping", "pong");
-  socket.emit("drone_connected", false)
+  logAndEmit("Drone not Connected", () => socket.emit("drone_connected", false))
   socket.emit("drone_can_mission", false)
 
   /* For testing purposes
@@ -126,3 +132,8 @@ io.on('connect', socket => {
     console.log(jsoncolor({text: 'Client diconnected from Socket.io'}));
   })
 });
+
+function logAndEmit(text, callback) {
+  log(text, "logs/" + logTime.getTime() + ".log")
+  callback()
+}

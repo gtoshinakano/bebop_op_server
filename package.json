@@ -5,6 +5,7 @@
   "main": "server",
   "dependencies": {
     "json-colorizer": "^2.2.2",
+    "log-to-file": "^2.0.2",
     "node-bebop": "^0.6.0",
     "socket.io": "^2.3.0"
   },
