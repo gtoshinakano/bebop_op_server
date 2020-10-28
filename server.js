@@ -129,7 +129,17 @@ io.on('connect', socket => {
       console.log("ComponentStateListChanged", data);
     });
 
-
+    socket.on("cmd", (data) => {
+      console.log(data)
+      switch(data.type){
+        case "takeOff":
+          drone.takeOff()
+        break
+        case "land":
+          drone.land()
+        break;
+      }
+    })
 
   })
 
