@@ -100,17 +100,17 @@ io.on('connect', socket => {
     //*/
 
     drone.on("MavlinkPlayErrorStateChanged", function(data) {
-      socket.emit("flight_status", "MavlinkPlayErrorStateChanged : " + JSON.stringify(data))
+      logAndEmit("Mavlink Play Error "+JSON.stringify(data), () => socket.emit("flight_status", "MavlinkPlayErrorStateChanged : " + JSON.stringify(data)))
     });
 
     drone.on("MavlinkFilePlayingStateChanged", function(data) {
-      socket.emit("flight_status", "MavlinkFilePlayingStateChanged : " + JSON.stringify(data))
+      logAndEmit("Mavlink File Playing "+JSON.stringify(data), () => socket.emit("flight_status", "MavlinkFilePlayingStateChanged : " + JSON.stringify(data)))
     });
 
     var canDoMission = false
     drone.on("AvailabilityStateChanged", function(data) {
       console.log("AvailabilityStateChanged", data);
-      socket.emit("flight_status", "AvailabilityStateChanged : " + JSON.stringify(data))
+      logAndEmit("Mission Availability State Changed "+JSON.stringify(data), () => socket.emit("flight_status", "AvailabilityStateChanged : " + JSON.stringify(data)))
       if (data.AvailabilityState === 1) {
         canDoMission = true;
         socket.emit("drone_can_mission", true)
@@ -121,7 +121,8 @@ io.on('connect', socket => {
     });
 
     socket.on("start_mission" , function(data) {
-      drone.Mavlink.start("/data/ftp/internal_000/flightplans/flightPlan.mavlink", 0);
+      logAndEmit("Starting Mission "+JSON.stringify(data), () => 
+      drone.Mavlink.start("/data/ftp/internal_000/flightplans/flightPlan.mavlink", 0))
     })
 
     drone.on("ComponentStateListChanged", function(data) {
@@ -138,6 +139,6 @@ io.on('connect', socket => {
 });
 
 function logAndEmit(text, callback) {
-  log(text, "logs/" + logTime.getTime() + ".log")
+  log(text, logFile)
   callback()
 }
