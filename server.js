@@ -4,8 +4,11 @@ var jsoncolor = require('json-colorizer');
 var log = require('log-to-file');
 var fs = require("fs");
 
-var logTime = new Date();
-fs.writeFileSync("logs/"+logTime.getTime()+".log", "Log Created at " + logTime+"\n", () => console.log("oie"))
+const logTime = new Date();
+const logFile = "logs/"+logTime.getTime()+".log";
+const gpsLogFile = "gps_logs/"+logTime.getTime()+"_gps.log";
+fs.writeFileSync(logFile, "Log Created at " + logTime+"\n", () => console.log("Log File Created "+ logFile))
+fs.writeFileSync(gpsLogFile, "GPS Log Created at " + logTime+"\n", () => console.log("GPS Log File Created " + gpsLogFile))
 
 
 io.on('connect', socket => {
@@ -27,42 +30,42 @@ io.on('connect', socket => {
     console.log("Bebop is ready to fly!");
     drone.on("ready", () => {
       socket.emit("drone_connected", true)
-      socket.emit("flight_status", "Drone is ready")
+      logAndEmit("Drone is ready to fly", () => socket.emit("flight_status", "Drone is ready to fly"));
       console.log(drone.navData);
     })
 
     // Send battery level
-    drone.on("battery", (data) => socket.emit("battery_level", data))
+    drone.on("battery", (data) => logAndEmit("Battery Level: "+data, () => socket.emit("battery_level", data)))
 
     // Send landed
-    drone.on("landed", () => socket.emit("flight_status", "Drone is on the ground"))
+    drone.on("landed", () => logAndEmit("Landed", () => socket.emit("flight_status", "Drone is on the ground")))
 
     // Send hovering
     drone.on("hovering", () => socket.emit("flight_status", "Drone is hovering"))
 
     // Send landing
-    drone.on("landing", () => socket.emit("flight_status", "Drone is landing"))
+    drone.on("landing", () => logAndEmit("Landing", () => socket.emit("flight_status", "Drone is landing")))
 
     // Send flying
     drone.on("flying", () => socket.emit("flight_status", "Drone is flying"))
 
     // Send takingOff
-    drone.on("takingOff", () => socket.emit("flight_status", "Drone is taking off"))
+    drone.on("takingOff", () => logAndEmit("Taking Off", () => socket.emit("flight_status", "Drone is taking off")))
 
     // Send emergency
-    drone.on("emergency", () => socket.emit("flight_status", "Drone encountered an emergency condition"))
+    drone.on("emergency", () => logAndEmit("Emergency", () => socket.emit("flight_status", "Drone encountered an emergency condition")))
 
-    drone.on("GPSFixStateChanged", (data) => socket.emit("flight_status", "GPS Fix State changed : " + JSON.stringify(data)))
+    drone.on("GPSFixStateChanged", (data) => logAndEmit("GPS Fix State "+JSON.stringify(data), () => socket.emit("flight_status", "GPS Fix State changed : " + JSON.stringify(data))))
 
-    drone.on("MagnetoCalibrationRequiredState", (data) => socket.emit("flight_status", "Calibration Required : " + JSON.stringify(data)))
+    drone.on("MagnetoCalibrationRequiredState", (data) => logAndEmit("Calibration Required "+JSON.stringify(data), () => socket.emit("flight_status", "Calibration Required : " + JSON.stringify(data))))
 
     drone.on("MaxAltitudeChanged", (data) => socket.emit("flight_status", "Max Altitude changed : " + JSON.stringify(data)))
 
     drone.on("MaxDistanceChanged", (data) => socket.emit("flight_status", "Max Distance changed : " + JSON.stringify(data)))
 
-    drone.on("OutdoorChanged", (data) => socket.emit("flight_status", "Outdoor changed : " + JSON.stringify(data)))
+    drone.on("OutdoorChanged", (data) => logAndEmit("Outdoor Changed "+JSON.stringify(data), () => socket.emit("flight_status", "Outdoor changed : " + JSON.stringify(data))))
 
-    drone.on("HomeChanged", (data) => socket.emit("flight_status", "Home changed : " + JSON.stringify(data)))
+    drone.on("HomeChanged", (data) => logAndEmit("Home Changed "+JSON.stringify(data), () => socket.emit("flight_status", "Home changed : " + JSON.stringify(data))))
 
     /* If number is different emit signal to the
       client with the new number of satellites found
@@ -70,7 +73,7 @@ io.on('connect', socket => {
     let numOfSat = 0;
 
     drone.on("NumberOfSatelliteChanged", (data) => {
-      console.log("Num of sat changed", data.numberOfSatellite);
+      log("Num of Satellites changed "+ data.numberOfSatellite, "logs/"+logTime.getTime()+".log");
       if(data.numberOfSatellite != numOfSat){
         numOfSat= data.numberOfSatellite;
         socket.emit("flight_status", "Number of Satellites : " + numOfSat)
@@ -86,6 +89,7 @@ io.on('connect', socket => {
     drone.WifiSettings.outdoorSetting(1)
     drone.on("PositionChanged", (data) => {
       console.log(data);
+      log(JSON.stringify(data), gpsLogFile)
       if(data.latitude != 500 && data.longitude != 500 && data.altitude != 500)
         socket.emit("gps_position_changed", data)
     })
