@@ -132,7 +132,7 @@ io.on('connect', socket => {
     socket.on("cmd", (data) => {
       console.log(data)
       switch(data.type){
-        case "takeOff":
+        case "take-off":
           drone.takeOff()
         break
         case "land":
